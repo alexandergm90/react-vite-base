@@ -1,40 +1,67 @@
-import {useQuery} from "@tanstack/react-query";
-import {Box, CircularProgress, Typography} from "@mui/material";
-import {api} from "../shared/apiClient";
-// import { useAppDispatch, useAppSelector } from "../shared/hooks"; // if you add hooks
-// import { inc } from "../features/counter/counterSlice";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../lib/api";
+import {
+    AppBar, Toolbar, Container, Box,
+    Typography, CircularProgress, Alert, Button
+} from "@mui/material";
+import {useDispatch, useSelector} from "react-redux";
+import type {RootState} from "../app/store.ts";
+import { setByAmount } from '../features/counter/counterSlice.ts'
+import {useEffect} from "react";
 
 type Todo = { id: number; title: string; completed: boolean };
 
 export default function Home() {
-    const {data, isLoading, isError} = useQuery({
+
+    const count = useSelector((state: RootState) => state.counter.value)
+    const dispatch = useDispatch()
+
+    const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
         queryKey: ["todos"],
-        queryFn: () => api<Todo[]>("https://jsonplaceholder.typicode.com/todos?_limit=5")
+        queryFn: () => api<Todo[]>("https://jsonplaceholder.typicode.com/todos?_limit=5"),
+        staleTime: 30_000,
+        refetchOnWindowFocus: false,
+        retry: 1,
     });
 
-    // const dispatch = useAppDispatch();
-    // const value = useAppSelector(s => s.counter.value);
-
-    if (isLoading) return <CircularProgress/>;
-    if (isError) return <Typography color="error">Failed to load todos.</Typography>;
+    useEffect(() => {
+        if (data) {
+            dispatch(setByAmount(data.length));
+        }
+    }, [data, dispatch]);
 
     return (
-        <Box p={3} display="grid" gap={2}>
-            <Typography variant="h5">Hello 👋</Typography>
+        <>
+            <AppBar position="static">
+                <Toolbar>
+                    <Typography variant="h6" sx={{ flex: 1 }}>FE Starter</Typography>
+                    <Button onClick={() => refetch()} disabled={isFetching}>Refresh</Button>
+                </Toolbar>
+            </AppBar>
 
-            {/* <Box display="flex" gap={1} alignItems="center">
-        <Typography>Counter: {value}</Typography>
-        <Button onClick={() => dispatch(inc())}>Increment</Button>
-      </Box> */}
+            <Container maxWidth="sm">
+                <Box mt={3} display="grid" gap={2}>
+                    <Typography variant="h5">Hello 👋</Typography>
 
-            <Box>
-                <Typography variant="subtitle1" gutterBottom>Sample todos (React Query)</Typography>
-                <ul>
-                    {data?.map(t => (
-                        <li key={t.id}>{t.title} {t.completed ? "✅" : "⏳"}</li>
-                    ))}
-                </ul>
-            </Box>
-        </Box>
+                    {isLoading && <Box display="flex" alignItems="center" gap={1}>
+                        <CircularProgress size={20} /> Loading…
+                    </Box>}
+
+                    {isError && <Alert severity="error">{(error as Error)?.message ?? "Failed to load"}</Alert>}
+
+                    <Typography variant="h5">Counter: {count}</Typography>
+
+                    {!isLoading && !isError && (
+                        <ul>
+                            {data!.map(t => (
+                                <li key={t.id}>
+                                    {t.title} {t.completed ? "✅" : "⏳"}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </Box>
+            </Container>
+        </>
     );
 }

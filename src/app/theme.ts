@@ -1,10 +1,2 @@
 import { createTheme } from "@mui/material/styles";
-
-const theme = createTheme({
-    palette: { mode: "light", primary: { main: "#1976d2" } },
-    components: {
-        MuiButton: { defaultProps: { variant: "contained" } }
-    }
-});
-
-export default theme;
+export default createTheme({ palette: { mode: "light", primary: { main: "#1976d2" } } });

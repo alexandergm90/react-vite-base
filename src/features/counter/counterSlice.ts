@@ -1,8 +1,31 @@
-import { createSlice } from "@reduxjs/toolkit";
-const slice = createSlice({
-    name: "counter",
-    initialState: { value: 0 },
-    reducers: { inc: s => { s.value += 1; } }
-});
-export const { inc } = slice.actions;
-export default slice.reducer;
+import { createSlice } from '@reduxjs/toolkit'
+import type { PayloadAction } from '@reduxjs/toolkit'
+
+export type CounterState = {
+    value: number
+}
+
+const initialState: CounterState = {
+    value: 0,
+}
+
+export const counterSlice = createSlice({
+    name: 'counter',
+    initialState,
+    reducers: {
+        increment: (state) => {
+            state.value += 1
+        },
+        decrement: (state) => {
+            state.value -= 1
+        },
+        setByAmount: (state, action: PayloadAction<number>) => {
+            state.value = action.payload
+        },
+    },
+})
+
+// Action creators are generated for each case reducer function
+export const { increment, decrement, setByAmount } = counterSlice.actions
+
+export default counterSlice.reducer
